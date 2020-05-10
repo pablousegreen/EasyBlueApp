@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html ng-app="films">
+<head>
+	<meta charset="UTF-8" />
+	<title>Oscar a la mejor película</title>
+	<script
+	src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+<!-- Optional theme -->
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
+
+
+</head>
+ 
+<body ng-app="springmvc-angular" ng-controller="FilmsController" ng-init="getFilms()">
+
+	<div class="container">
+	  <div class="row">
+	
+	    <div class="col-md-12">
+	      <h1>Add Film</h1>
+	       <div class="row">
+	         <div class="col-md-12">
+	           <b></b>
+	           <br>
+	           <a href="javascript:void();" class="btn btn-success" data-toggle="modal" ng-click="showPopup()"><i class="material-icons"></i> <span>Modal Popup</span></a>
+	         </div>
+	       </div>
+	                  
+	    </div>
+	  </div>
+	</div>
+ 
+	<div class="container" ng-show="films != null">
+		<div class="film-info-bottom" ng-repeat="film in films">
+			<h4><span> {{film.year}} - {{film.title}} - {{film.director}} </span></h4>
+		</div>
+	</div>
+	
+	<div class="form">
+		<label for="title">Título:</label>
+		<input id="title" ng-model="title" type="text" />
+		
+		<label for="year">Año:</label>
+		<input id="year" ng-model="year" type="number" />
+		
+		<label for="director">Director:</label>
+		<input id="director" ng-model="director" type="text" />
+		
+		<button id="addBtn" class="btn" ng-click="addFilm()">Añadir película</button>
+	</div>
+	
+	<h4>{{msg}}</h4>
+	
+	<script src="https://code.angularjs.org/1.4.9/angular.min.js"></script>
+ 	<script src="https://code.angularjs.org/1.4.9/angular-route.js"></script>
+	<script src="https://code.angularjs.org/1.4.9/angular-resource.min.js"></script>
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-2.5.0.js"></script>
+    
+	<script type="text/javascript">
+	var app = angular.module('films', [ "ngResource", "ui.bootstrap" ]);
+	 
+	app.controller('FilmsController', [ '$scope', '$http', '$uibModal', function($scope, $http, $uibModal) {
+			$scope.getFilms = function() {
+				$http.get('/films').success(function(data) {
+					$scope.films = data;
+				});
+			}
+			
+			$scope.addFilm = function() {
+				console.log('Were gonna see all films--');
+				$http.post('/films', 
+					{
+						title : $scope.title,
+						year : $scope.year,
+						director : $scope.director
+					}
+				).success(function(data) {
+					$scope.msg = 'Pelicula creada correctamente';
+					$scope.getFilms();
+				}).error(function(data) {
+					$scope.msg = 'Se ha producido un error';
+				});
+			}
+			
+			$scope.showPopup = function(){	
+				  //user = {'first_name':'JON','last_name':'Smith','address':'Ny'}
+				  filmsObj = {title: '', year: 1000, director: ''};
+				  $scope.modalInstance = $uibModal.open({
+						 ariaLabelledBy: 'modal-title',
+						 ariaDescribedBy: 'modal-body',
+						 templateUrl: 'view.html',
+						 controller :'ModelHandlerController',
+						 controllerAs: '$ctrl',
+						 size: 'lg',
+						 resolve: {
+							 filmsObj: function(){
+									return filmsObj;
+								 }
+							}
+					   });
+				}
+			
+			
+			/*$scope.showPopup = function(){	
+				  filmsObj = {title: '', year: 1000, director: ''};
+				  $scope.modalInstance = $uibModal.open({
+						 ariaLabelledBy: 'modal-title',
+						 ariaDescribedBy: 'modal-body',
+						 templateUrl: 'view.html',
+						 controller :'ModelHandlerController',
+						 controllerAs: '$ctrl',
+						 size: 'lg',
+						 resolve: {
+							 filmsObj: function(){
+									return filmsObj;
+								 }
+							}
+					   });
+				}*/
+	} ]);
+	
+	/*app.controller("ModelHandlerController",function($scope,$uibModalInstance,$http){
+			$scope.title = filmsObj.title;
+			$scope.year = filmsObj.year;
+			$scope.director  = filmsObj.director;
+			console.log('Title: ', filmsObj.title, 'Year: ', filmsObj.year);
+			 $scope.cancelModal = function(){
+				 console.log("cancelmodal");
+				 $uibModalInstance.dismiss('close');
+			 }
+			 $scope.ok = function(){
+			 	$uibModalInstance.close('save');
+			 }
+	});*/
+	
+	app.controller("ModelHandlerController",function($scope,$uibModalInstance,$http){
+		$scope.title = filmsObj.title;
+		$scope.year = filmsObj.year;
+		$scope.director  = filmsObj.director;
+		console.log('Title: ', filmsObj.title, 'Year: ', filmsObj.year);
+		$scope.cancelModal = function(){
+					 console.log("cancelmodal");
+					 $uibModalInstance.dismiss('close');
+				 }
+				 $scope.ok = function(){
+				 	$uibModalInstance.close('save');
+				 }
+		});
+	
+	</script>
+</body>
+</html>
