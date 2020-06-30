@@ -15,7 +15,15 @@ import java.util.stream.Stream;
 
 import com.mongodb.lang.Nullable;
 
+import lombok.Data;
+
 public class LambdasUtil {
+	private static String brand = null;// EnumCatsKeys.BRAND_APPLE.getBrand().orElse("s/b");
+		
+	public static Optional<String> getBrand() {
+		return Optional.ofNullable(brand);
+	}
+
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -23,19 +31,22 @@ public class LambdasUtil {
 		//System.out.println(getSumDoubleTotal());
 		//System.out.println(getShowingLines());
 		//getStringList();
-		getNewList();
+//		getNewList();
 //		getBooksvsLines();
 //		getMapByNameAgeListPeople();
 //		getMapTotalAgeByNameListPeople();
-//		getMapTotalByNameListPeople();
+		getMapTotalByNameListPeople();
 //		getPeoppleOrderByPoints();
 //		getTotalPointsFromPerson();
-		System.out.println("--------------");
-		getPeopleTrx();
-		System.out.println("--------------");
-		getListPeopleTrx();
-		System.out.println("--------------");
-		getCategoriesEnum();
+//		System.out.println("--------------");
+//		getPeopleTrx();
+//		System.out.println("--------------");
+//		getListPeopleTrx();
+//		System.out.println("--------------");
+//		getCategoriesEnum();
+//		System.out.println("--------------");
+//		getListOfPersonDTO();
+		getMapTotalAgeByNameListPeople();
 	}
 	
 	
@@ -206,8 +217,8 @@ public class LambdasUtil {
 	                   .collect(Collectors.groupingBy(Person::getName));
 	    
 	    for(String name : totalByName.keySet()) {
-	    	System.out.println(name);
-	    	totalByName.get(name).stream().forEach(e -> System.out.println(e.getName() +"- "+e.getAge()));
+//	    	System.out.println(name);
+	    	totalByName.get(name).stream().forEach(e -> System.out.println("Name: "+e.getName() +", Age: "+e.getAge()));
 	    }
 	}
 	
@@ -297,6 +308,88 @@ public class LambdasUtil {
 		
 		System.out.println(EnumCatsKeys.BRAND_APPLE.getBrand().orElse(""));
 		System.out.println(EnumCatsKeys.BRAND_WIN.getBrand().orElse(""));
+		
+		System.out.println("-IsPresent: "+getBrand().isPresent());
+		System.out.println("-getBrand: "+getBrand().orElse(""));
+		System.out.println("-BRAND_APPLE: "+EnumCatsKeys.BRAND_APPLE.getBrand().orElse(""));
+		if(getBrand().equals(EnumCatsKeys.BRAND_APPLE.getBrand())){
+			System.out.println("Yeahh we´ve got: "+EnumCatsKeys.BRAND_APPLE.getBrand().orElse("-"));
+		}
+		if(EnumCatsKeys.GENERIC.equals(EnumCatsKeys.GENERIC)){
+			System.out.println("mmmm and what?: "+EnumCatsKeys.GENERIC);
+		}
+	}
+	
+	public static void getListOfPersonDTO(){
+		TransactionCommentsCountDS t = new TransactionCommentsCountDS("tri8kmbwjqtqqqtis2lv", 1);
+		TransactionCommentsCountDS t1 = new TransactionCommentsCountDS("trmtjrxodsb4uepzoxg6", 2);
+		TransactionCommentsCountDS t2 = new TransactionCommentsCountDS(null, 3);
+		List<TransactionCommentsCountDS> listT = new ArrayList<>();
+		listT.add(t);
+		listT.add(t1);
+		listT.add(t2);
+		listT.add(null);
+		
+	    List<Person> people = cratePeople();
+	    
+	    addTransactionsToPeople(people, listT);
+	    List<PersonDTO> peopleDto = toListPersonDTO(people);
+	    peopleDto.stream().forEach(p -> System.out.println(p.getName() +" - "+p.getAge()+" - "+p.getPoints()));
+	    
+	    peopleDto = people.stream()
+	    		.map(LambdasUtil::toPersonDTO)
+	    		.collect(Collectors.toList());
+	    System.out.println("-    -    -    -    -     -     -    -      -     -     -   -   -");
+	    peopleDto.stream().forEach(p -> System.out.println(p.getName() +" - "+p.getAge()+" - "+p.getPoints()));
+	    
+		
+	}
+	
+	private static List<Person> addTransactionsToPeople(List<Person> people, List<TransactionCommentsCountDS> transactions ){
+		
+		if(people == null || transactions == null) {
+			return people;
+		}
+		people.stream()
+		.map(p -> {
+			p.setTrs(transactions);	
+			return p;
+		})
+		.collect(Collectors.toList());
+		
+		return people;
+	}
+	
+	private static List<PersonDTO> toListPersonDTO(List<Person> people){
+		List<PersonDTO> listToDto = new ArrayList<>();
+		if(people == null) {
+			return listToDto;
+		}
+		
+		listToDto = people.stream()
+		.map(p->{
+			PersonDTO dto = new PersonDTO();
+			dto.setAge(p.getAge());
+			dto.setName(p.getName());
+			dto.setPoints(p.getPoints());
+			dto.setTrs(p.getTrs().orElse(new ArrayList<TransactionCommentsCountDS>()));
+			return dto;
+		}).collect(Collectors.toList());
+		return listToDto;
+	}
+	
+	private static PersonDTO toPersonDTO(Person people){
+		PersonDTO personDTO = new PersonDTO();
+		if(people == null) {
+			return personDTO;
+		}
+		
+		personDTO.setAge(people.getAge());
+		personDTO.setName(people.getName());
+		personDTO.setPoints(people.getPoints());
+		personDTO.setTrs(people.getTrs().orElse(new ArrayList<TransactionCommentsCountDS>()));
+		return personDTO;
+		
 	}
 	
 	public static class TransactionCommentsCountDS {
@@ -329,6 +422,7 @@ public class LambdasUtil {
 		}	
 	}
 	
+	@Data
 	public static class Bands{
 		private Integer id;
 		private String name;
@@ -400,6 +494,62 @@ public class LambdasUtil {
 		public void setTrs(List<TransactionCommentsCountDS> trs) {
 			this.trs = trs;
 		}
+	}
+	
+	public static class PersonDTO{
+		
+		private Integer age; 
+		private String name;
+		private Integer points;
+		private TransactionCommentsCountDS tr;
+		private List<TransactionCommentsCountDS> trs;
+		
+		public PersonDTO() {
+			
+		}
+		
+		public PersonDTO(Integer age, String name, Integer points, TransactionCommentsCountDS tr) {
+			super();
+			this.age = age;
+			this.name = name;
+			this.points = points;
+			this.tr = tr;
+		}
+		
+		public Integer getPoints() {
+			return points;
+		}
+		public void setPoints(Integer points) {
+			this.points = points;
+		}
+		
+		public Integer getAge() {
+			return age;
+		}
+		public void setAge(Integer age) {
+			this.age = age;
+		}
+		public String getName() {
+			return name;
+		}
+		public void setName(String name) {
+			this.name = name;
+		}
+		
+		public Optional<TransactionCommentsCountDS> getTr() {
+			return Optional.ofNullable(tr);
+		}
+		public void setTr(TransactionCommentsCountDS tr) {
+			this.tr = tr;
+		}
+		
+		public Optional<List<TransactionCommentsCountDS>> getTrs() {
+			return Optional.ofNullable(trs);
+		}
+		public void setTrs(List<TransactionCommentsCountDS> trs) {
+			this.trs = trs;
+		}
+		
 	}
 
 }

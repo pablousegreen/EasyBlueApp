@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public enum EnumCatsKeys {
 	
-	
+	GENERIC,
 	APPLE(CategoriesEnum.APPLE),
 	WIN(CategoriesEnum.WIN),
 	BRAND_APPLE("APPLE"),
@@ -25,7 +25,11 @@ public enum EnumCatsKeys {
     	this.brand = brand;
     }
     
-    public Optional<Map<String, List<String>>> getBrandsCategories(){
+    EnumCatsKeys() {
+		// TODO Auto-generated constructor stub
+	}
+
+	public Optional<Map<String, List<String>>> getBrandsCategories(){
     	return resultCategoriesMap;
     }
 	
