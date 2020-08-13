@@ -9,13 +9,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.mongodb.lang.Nullable;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 public class LambdasUtil {
 	private static String brand = null;// EnumCatsKeys.BRAND_APPLE.getBrand().orElse("s/b");
@@ -35,7 +38,7 @@ public class LambdasUtil {
 //		getBooksvsLines();
 //		getMapByNameAgeListPeople();
 //		getMapTotalAgeByNameListPeople();
-		getMapTotalByNameListPeople();
+//		getMapTotalByNameListPeople();
 //		getPeoppleOrderByPoints();
 //		getTotalPointsFromPerson();
 //		System.out.println("--------------");
@@ -46,7 +49,10 @@ public class LambdasUtil {
 //		getCategoriesEnum();
 //		System.out.println("--------------");
 //		getListOfPersonDTO();
-		getMapTotalAgeByNameListPeople();
+//		getMapTotalAgeByNameListPeople();
+		filterVsMapFilterList();
+		System.out.println("ALL points : "+executeReduceOnParallelizedStream());
+		System.out.println(dividePoints(1));
 	}
 	
 	
@@ -183,6 +189,7 @@ public class LambdasUtil {
 		list.add(new Person(22, "Sara", 600));
 		list.add(new Person(20, "Bob", 650));
 		list.add(new Person(32, "Paula", 450));
+		list.add(null);
 		list.add(new Person(32, "Paul", 480));
 		list.add(new Person(3, "Jack", 501));
 		list.add(new Person(11, "Jill", 503));
@@ -217,7 +224,6 @@ public class LambdasUtil {
 	                   .collect(Collectors.groupingBy(Person::getName));
 	    
 	    for(String name : totalByName.keySet()) {
-//	    	System.out.println(name);
 	    	totalByName.get(name).stream().forEach(e -> System.out.println("Name: "+e.getName() +", Age: "+e.getAge()));
 	    }
 	}
@@ -253,7 +259,7 @@ public class LambdasUtil {
 		final List<Person> people = cratePeople();
 		//Map<String, Integer> res = 
 		Integer res = people.stream()
-		.filter(p -> p.getPoints() != null)
+		.filter(Objects::nonNull)
 		.map(Person :: getPoints) //Stream<Integer>
 		.reduce(0, (total, points)-> total + points);
 		System.out.println(res);
@@ -345,6 +351,15 @@ public class LambdasUtil {
 		
 	}
 	
+	public static void filterVsMapFilterList() {
+		 List<Person> people = cratePeople();
+		 List<Person> peopleFilter = people.stream().filter(Objects::nonNull).collect(Collectors.toList());
+		 peopleFilter.stream().forEach(p -> System.out.println(p.getName() +" - "+p.getAge()+" - "+p.getPoints()));
+		 
+		 List<String> names = people.stream().filter(Objects::nonNull).map(Person :: getName).collect(Collectors.toList());
+		 names.stream().forEach(System.out::println);
+	}
+	
 	private static List<Person> addTransactionsToPeople(List<Person> people, List<TransactionCommentsCountDS> transactions ){
 		
 		if(people == null || transactions == null) {
@@ -378,6 +393,18 @@ public class LambdasUtil {
 		return listToDto;
 	}
 	
+	
+	public static void getPeoppleOrderByPointsMap(){
+		final List<Person> people = cratePeople();
+		Map<String, List<Integer>> res = people.stream()
+		.filter(p -> p.getPoints() != null)
+		.collect(Collectors.groupingBy(Person :: getName, Collectors.mapping(Person::getPoints, Collectors.toList())));
+		
+		res.entrySet().stream()
+		.forEach(e -> System.out.println(e.getKey() + ":" + e.getValue()));
+		
+	}
+	
 	private static PersonDTO toPersonDTO(Person people){
 		PersonDTO personDTO = new PersonDTO();
 		if(people == null) {
@@ -390,6 +417,23 @@ public class LambdasUtil {
 		personDTO.setTrs(people.getTrs().orElse(new ArrayList<TransactionCommentsCountDS>()));
 		return personDTO;
 		
+	}
+	
+	public static Integer executeReduceOnParallelizedStream() {
+		return cratePeople()
+				.parallelStream()
+				.filter(Objects::nonNull)
+				.reduce(0, (partialPoints, people) -> partialPoints + people.getPoints(), Integer :: sum);
+	}
+	
+	public static int divideListElements(List<Integer> values, int divider) {
+		return values.parallelStream().filter(Objects::nonNull)
+				.reduce(0, (a,b) -> UtilsOps.divide(a, divider) + UtilsOps.divide(b , divider));
+	}
+	
+	public static int dividePoints(int divider) {
+		return divideListElements(cratePeople().stream().filter(Objects::nonNull).map(Person ::getPoints)
+				.collect(Collectors.toList()), divider );
 	}
 	
 	public static class TransactionCommentsCountDS {
@@ -423,26 +467,16 @@ public class LambdasUtil {
 	}
 	
 	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
 	public static class Bands{
 		private Integer id;
 		private String name;
-		
-		public Integer getId() {
-			return id;
-		}
-		public void setId(Integer id) {
-			this.id = id;
-		}
-		public String getName() {
-			return name;
-		}
-		public void setName(String name) {
-			this.name = name;
-		}
-		
-		
 	}
 	
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
 	public static class Person{
 		private Integer age; 
 		private String name;
@@ -468,18 +502,6 @@ public class LambdasUtil {
 			this.age = age;
 			this.name = name;
 		}
-		public Integer getAge() {
-			return age;
-		}
-		public void setAge(Integer age) {
-			this.age = age;
-		}
-		public String getName() {
-			return name;
-		}
-		public void setName(String name) {
-			this.name = name;
-		}
 		
 		public Optional<TransactionCommentsCountDS> getTr() {
 			return Optional.ofNullable(tr);
@@ -496,6 +518,8 @@ public class LambdasUtil {
 		}
 	}
 	
+	@Data
+	@AllArgsConstructor
 	public static class PersonDTO{
 		
 		private Integer age; 
@@ -516,25 +540,6 @@ public class LambdasUtil {
 			this.tr = tr;
 		}
 		
-		public Integer getPoints() {
-			return points;
-		}
-		public void setPoints(Integer points) {
-			this.points = points;
-		}
-		
-		public Integer getAge() {
-			return age;
-		}
-		public void setAge(Integer age) {
-			this.age = age;
-		}
-		public String getName() {
-			return name;
-		}
-		public void setName(String name) {
-			this.name = name;
-		}
 		
 		public Optional<TransactionCommentsCountDS> getTr() {
 			return Optional.ofNullable(tr);
