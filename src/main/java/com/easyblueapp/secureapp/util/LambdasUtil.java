@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.mongodb.lang.Nullable;
+import com.sun.istack.Nullable;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -39,7 +39,7 @@ public class LambdasUtil {
 //		getMapByNameAgeListPeople();
 //		getMapTotalAgeByNameListPeople();
 //		getMapTotalByNameListPeople();
-//		getPeoppleOrderByPoints();
+		getPeoppleOrderByPoints();
 //		getTotalPointsFromPerson();
 //		System.out.println("--------------");
 //		getPeopleTrx();
@@ -50,9 +50,9 @@ public class LambdasUtil {
 //		System.out.println("--------------");
 //		getListOfPersonDTO();
 //		getMapTotalAgeByNameListPeople();
-		filterVsMapFilterList();
+		/*filterVsMapFilterList();
 		System.out.println("ALL points : "+executeReduceOnParallelizedStream());
-		System.out.println(dividePoints(1));
+		System.out.println(dividePoints(1));*/
 	}
 	
 	
@@ -201,6 +201,7 @@ public class LambdasUtil {
 	private static void getMapByNameAgeListPeople() {
 	    final List<Person> people = cratePeople();
 		Map<String, List<Integer>> ageByName = people.stream().
+				filter(e -> Objects.nonNull(e)).
 				collect(Collectors.groupingBy(Person::getName, Collectors.mapping(Person::getAge, Collectors.toList())));
 		
 		System.out.println(ageByName);
@@ -231,7 +232,7 @@ public class LambdasUtil {
 	public static void getPeoppleOrderByPoints(){
 		final List<Person> people = cratePeople();
 		Map<String, List<Integer>> res = people.stream()
-		.filter(p -> p.getPoints() != null)
+		.filter(Objects::nonNull)
 		.collect(Collectors.groupingBy(Person :: getName, Collectors.mapping(Person::getPoints, Collectors.toList())));
 		System.out.println(res);
 		
@@ -290,7 +291,7 @@ public class LambdasUtil {
 				people.getTrs().orElse(new ArrayList<>());// List<TransactionCommentsCountDS> is null , then new ArrayList<>()
 		
 		List<String> ids =trs.stream()
-				.filter(tr-> tr !=null) // Only TransactionCommentsCountDS != null
+				.filter(tr-> Objects.nonNull(tr)) // Only TransactionCommentsCountDS != null
 				.collect(Collectors.toList())  //new List<TransactionCommentsCountDS> not Empty
 				.stream()
 				.map(s -> s.getTransactionId().orElse("unknown"))  // new List<String> of TransactionCommentsCountDS.getTransactionId is null, then unknown
